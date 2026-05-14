@@ -1,0 +1,190 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Game Vault | Nick Duda</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            width: 100%;
+            padding: 40px 20px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            text-align: center;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            letter-spacing: -1px;
+            color: var(--accent-color);
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            margin-top: 10px;
+            font-size: 1.1rem;
+        }
+
+        #arcade-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 40px;
+            width: 95%;
+            max-width: 1400px;
+            padding-bottom: 60px;
+        }
+
+        .game-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+            transition: transform 0.2s ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-color);
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .game-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .emulator-container {
+            position: relative;
+            width: 560px;
+            height: 384px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 4px solid #000;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .loading-state {
+            padding: 50px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Retro Game Vault</h1>
+        <p class="subtitle">Personal Collection of MS-DOS Classics</p>
+    </header>
+
+    <div id="loading" class="loading-state">Syncing with Archive.org list...</div>
+    
+    <main id="arcade-grid"></main>
+
+    <footer>
+        Powered by Internet Archive &middot; 2026 Vault
+    </footer>
+
+    <script>
+        // Your specific Archive.org list metadata URL
+        const LIST_API_URL = "https://archive.org/metadata/@nick_duda/lists/1/pc-games";
+
+        async function fetchGames() {
+            const grid = document.getElementById('arcade-grid');
+            const loading = document.getElementById('loading');
+
+            try {
+                const response = await fetch(LIST_API_URL);
+                const data = await response.json();
+                
+                // Parse items from metadata
+                const items = data.metadata.items ? JSON.parse(data.metadata.items) : [];
+
+                if (items.length === 0) {
+                    loading.textContent = "No games found. Make sure your list is set to Public!";
+                    return;
+                }
+
+                loading.style.display = 'none';
+
+                items.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'game-card';
+                    
+                    const title = item.title || item.identifier;
+                    const slug = item.identifier;
+
+                    card.innerHTML = `
+                        <div class="game-header">
+                            <span class="game-title">${title}</span>
+                        </div>
+                        <div class="emulator-container">
+                            <iframe 
+                                src="https://archive.org/embed/${slug}" 
+                                allow="fullscreen" 
+                                webkitallowfullscreen="true" 
+                                mozallowfullscreen="true" 
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error("Error:", error);
+                loading.textContent = "Unable to load vault. Please check your internet connection or list privacy settings.";
+            }
+        }
+
+        fetchGames();
+    </script>
+</body>
+</html>
