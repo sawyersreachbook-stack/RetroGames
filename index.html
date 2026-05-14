@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retro Game Vault | Nick Duda</title>
+    <title>Duda Arcade | Retro Classics</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent-color: #38bdf8;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
+            --bg-color: #020617;
+            --card-bg: #0f172a;
+            --accent-color: #0ea5e9; /* Cyan Arcade Glow */
+            --text-primary: #f8fafc;
+            --text-secondary: #64748b;
+            --arcade-red: #ef4444;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-primary);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Courier New', Courier, monospace; /* Retro Tech Font */
             margin: 0;
             padding: 0;
             display: flex;
@@ -27,61 +28,68 @@
 
         header {
             width: 100%;
-            padding: 40px 20px;
-            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            padding: 50px 20px;
+            background: linear-gradient(180deg, #1e293b 0%, #020617 100%);
             text-align: center;
-            border-bottom: 1px solid #334155;
-            margin-bottom: 40px;
+            border-bottom: 3px solid var(--accent-color);
+            box-shadow: 0 4px 20px rgba(14, 165, 233, 0.3);
+            margin-bottom: 50px;
         }
 
         h1 {
             margin: 0;
-            font-size: 2.5rem;
-            letter-spacing: -1px;
-            color: var(--accent-color);
+            font-size: 3rem;
+            letter-spacing: 4px;
+            color: var(--text-primary);
+            text-shadow: 3px 3px 0px var(--arcade-red), -2px -2px 0px var(--accent-color);
             text-transform: uppercase;
         }
 
         .subtitle {
-            color: var(--text-secondary);
-            margin-top: 10px;
-            font-size: 1.1rem;
+            color: var(--accent-color);
+            margin-top: 15px;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            font-weight: bold;
         }
 
         #arcade-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
-            gap: 40px;
+            gap: 50px;
             width: 95%;
             max-width: 1400px;
-            padding-bottom: 60px;
+            padding-bottom: 80px;
         }
 
         .game-card {
             background-color: var(--card-bg);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            border: 1px solid #334155;
-            transition: transform 0.2s ease;
+            border-radius: 4px; /* Sharper, more industrial corners */
+            padding: 10px;
+            border: 2px solid #334155;
+            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+            position: relative;
         }
 
         .game-card:hover {
-            transform: translateY(-5px);
             border-color: var(--accent-color);
+            box-shadow: 0 0 25px rgba(14, 165, 233, 0.4);
         }
 
         .game-header {
+            background: #1e293b;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--accent-color);
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
+            justify-content: center;
         }
 
         .game-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            font-weight: bold;
         }
 
         .emulator-container {
@@ -90,49 +98,57 @@
             height: 384px;
             margin: 0 auto;
             background: #000;
-            border-radius: 8px;
             overflow: hidden;
-            border: 4px solid #000;
+            border: 2px solid #000;
         }
 
+        /* This hides the "Internet Archive" logo overlay that sometimes appears before load */
         iframe {
             width: 100%;
             height: 100%;
             border: none;
+            background: transparent;
         }
 
         .loading-state {
-            padding: 50px;
-            text-align: center;
-            color: var(--text-secondary);
-            font-style: italic;
+            padding: 100px;
+            font-size: 1.5rem;
+            color: var(--arcade-red);
+            text-transform: uppercase;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
         }
 
         footer {
             margin-top: auto;
-            padding: 20px;
+            padding: 30px;
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Retro Game Vault</h1>
-        <p class="subtitle">Personal Collection of MS-DOS Classics</p>
+        <h1>DUDA ARCADE</h1>
+        <p class="subtitle">SYSTEM STATUS: ONLINE // PLAYER 1 READY</p>
     </header>
 
-    <div id="loading" class="loading-state">Syncing with Archive.org list...</div>
+    <div id="loading" class="loading-state">Initializing System...</div>
     
     <main id="arcade-grid"></main>
 
     <footer>
-        Powered by Internet Archive &middot; 2026 Vault
+        &copy; 2026 N. DUDA &middot; POWERED BY THE ARCHIVE ENGINE
     </footer>
 
     <script>
-        // Updated API URL to use the search scrape service
         const LIST_API_URL = "https://archive.org/services/search/v1/scrape?fields=identifier,title&q=list:pc-games AND uploader:nick_duda";
 
         async function fetchGames() {
@@ -142,12 +158,10 @@
             try {
                 const response = await fetch(LIST_API_URL);
                 const data = await response.json();
-                
-                // The search scrape API returns items in an array called 'items'
                 const items = data.items || [];
 
                 if (items.length === 0) {
-                    loading.textContent = "No games found. Double check that your list is named 'pc-games' and is public!";
+                    loading.textContent = "Error: No data found in vault.";
                     return;
                 }
 
@@ -157,7 +171,6 @@
                     const card = document.createElement('div');
                     card.className = 'game-card';
                     
-                    // Clean up title if missing
                     const slug = item.identifier;
                     const title = item.title || slug.replace(/([A-Z])/g, ' $1').trim();
 
@@ -179,8 +192,7 @@
                 });
 
             } catch (error) {
-                console.error("Error:", error);
-                loading.textContent = "Unable to load vault. Please check your internet connection or list privacy settings.";
+                loading.textContent = "Connection Terminated. Check link status.";
             }
         }
 
