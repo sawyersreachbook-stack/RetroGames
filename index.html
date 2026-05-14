@@ -17,7 +17,7 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-primary);
-            font-family: 'Courier New', Courier, monospace; /* Retro Tech Font */
+            font-family: 'Courier New', Courier, monospace;
             margin: 0;
             padding: 0;
             display: flex;
@@ -64,7 +64,7 @@
 
         .game-card {
             background-color: var(--card-bg);
-            border-radius: 4px; /* Sharper, more industrial corners */
+            border-radius: 4px;
             padding: 10px;
             border: 2px solid #334155;
             box-shadow: 0 0 15px rgba(0,0,0,0.8);
@@ -102,7 +102,6 @@
             border: 2px solid #000;
         }
 
-        /* This hides the "Internet Archive" logo overlay that sometimes appears before load */
         iframe {
             width: 100%;
             height: 100%;
@@ -149,7 +148,8 @@
     </footer>
 
     <script>
-        const LIST_API_URL = "https://archive.org/services/search/v1/scrape?fields=identifier,title&q=list:pc-games AND uploader:nick_duda";
+        // Use the metadata list API which returns items for a specific user list
+        const LIST_API_URL = "https://archive.org/metadata/@nick_duda/lists/1/pc-games";
 
         async function fetchGames() {
             const grid = document.getElementById('arcade-grid');
@@ -158,21 +158,25 @@
             try {
                 const response = await fetch(LIST_API_URL);
                 const data = await response.json();
-                const items = data.items || [];
+                
+                // For 'Lists', Archive.org stores the item data inside a stringified 'items' metadata field
+                const rawItems = data.metadata.items ? JSON.parse(data.metadata.items) : [];
 
-                if (items.length === 0) {
-                    loading.textContent = "Error: No data found in vault.";
+                if (rawItems.length === 0) {
+                    loading.textContent = "Error: Vault Empty. Confirm list is public.";
                     return;
                 }
 
                 loading.style.display = 'none';
 
-                items.forEach(item => {
+                rawItems.forEach(item => {
                     const card = document.createElement('div');
                     card.className = 'game-card';
                     
+                    // Archive list identifier
                     const slug = item.identifier;
-                    const title = item.title || slug.replace(/([A-Z])/g, ' $1').trim();
+                    // Format title: use provided title or clean up the identifier slug
+                    const title = item.title || slug.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
 
                     card.innerHTML = `
                         <div class="game-header">
@@ -192,6 +196,7 @@
                 });
 
             } catch (error) {
+                console.error("Fetch Error:", error);
                 loading.textContent = "Connection Terminated. Check link status.";
             }
         }
