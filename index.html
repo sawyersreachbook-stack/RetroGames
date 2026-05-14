@@ -12,6 +12,7 @@
             --text-primary: #f8fafc;
             --text-secondary: #64748b;
             --arcade-red: #ef4444;
+            --arcade-green: #22c55e;
         }
 
         body {
@@ -24,27 +25,81 @@
         }
 
         header {
-            width: 100%; padding: 50px 20px;
+            width: 100%; padding: 40px 20px;
             background: linear-gradient(180deg, #1e293b 0%, #020617 100%);
             text-align: center; border-bottom: 3px solid var(--accent-color);
             box-shadow: 0 4px 20px rgba(14, 165, 233, 0.3);
-            margin-bottom: 50px;
         }
 
-        h1 { margin: 0; font-size: 3rem; letter-spacing: 4px; text-shadow: 3px 3px 0px var(--arcade-red), -2px -2px 0px var(--accent-color); text-transform: uppercase; }
-        .subtitle { color: var(--accent-color); margin-top: 15px; font-size: 1.2rem; font-weight: bold; }
+        h1 { margin: 0; font-size: 3rem; letter-spacing: 4px; text-shadow: 3px 3px 0px var(--arcade-red); text-transform: uppercase; }
+
+        .guide-panel {
+            max-width: 800px; width: 90%;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px dashed var(--arcade-green);
+            padding: 20px; margin: 30px 0;
+            border-radius: 8px; font-size: 0.9rem;
+        }
+        .guide-title { color: var(--arcade-green); font-weight: bold; margin-bottom: 10px; text-transform: uppercase; }
+        .key { background: #334155; padding: 2px 6px; border-radius: 4px; color: white; border: 1px solid #475569; }
 
         #arcade-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
             gap: 50px; width: 95%; max-width: 1400px; padding-bottom: 80px;
         }
 
-        .game-card { background-color: var(--card-bg); padding: 10px; border: 2px solid #334155; box-shadow: 0 0 15px rgba(0,0,0,0.8); }
-        .game-header { background: #1e293b; padding: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--accent-color); display: flex; justify-content: center; }
+        .game-card { 
+            background-color: var(--card-bg); 
+            padding: 15px; 
+            border: 2px solid #334155; 
+            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* Styles for when the card goes Fullscreen/Cinema Mode */
+        .game-card:fullscreen {
+            padding: 0;
+            background: black;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-header { width: 100%; background: #1e293b; padding: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--accent-color); text-align: center; }
         .game-title { font-size: 1.1rem; color: var(--accent-color); text-transform: uppercase; font-weight: bold; }
         
-        .emulator-container { width: 560px; height: 384px; margin: 0 auto; background: #000; border: 2px solid #000; }
-        iframe { width: 100%; height: 100%; border: none; }
+        /* Fixed aspect ratio for retro scaling */
+        .emulator-container { 
+            width: 100%; max-width: 640px; aspect-ratio: 4 / 3; 
+            background: #000; border: 2px solid #000; 
+        }
+
+        .game-card:fullscreen .emulator-container {
+            max-width: none;
+            height: 100vh;
+            width: auto;
+        }
+
+        iframe { width: 100%; height: 100%; border: none; display: block; }
+
+        .controls { width: 100%; display: flex; justify-content: center; padding-top: 15px; }
+
+        .cinema-btn {
+            background: var(--arcade-red);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+        .cinema-btn:hover { background: #b91c1c; transform: scale(1.05); }
 
         footer { margin-top: auto; padding: 30px; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; }
     </style>
@@ -53,29 +108,60 @@
 
     <header>
         <h1>DUDA ARCADE</h1>
-        <p class="subtitle">SYSTEM STATUS: ONLINE // PLAYER 1 READY</p>
     </header>
+
+    <div class="guide-panel">
+        <div class="guide-title">🚀 SYSTEM INSTRUCTIONS</div>
+        <ul style="list-style-type: none; padding: 0; line-height: 1.6;">
+            <li>1. Click the <span class="key">Power Button</span> on a game to load.</li>
+            <li>2. Click <span class="key">Toggle Cinema Mode</span> to fill the browser window.</li>
+            <li>3. Inside the game, press <span class="key">Alt</span> + <span class="key">Enter</span> to scale the graphics.</li>
+            <li>4. To exit: Press <span class="key">Esc</span>.</li>
+        </ul>
+    </div>
     
     <main id="arcade-grid"></main>
 
     <footer>&copy; 2026 N. DUDA &middot; POWERED BY THE ARCHIVE ENGINE</footer>
 
     <script>
+        // ADD NEW GAMES TO THIS LIST
         const myGames = [
             { id: 'DukeNukemIi', title: 'Duke Nukem II' }
         ];
 
         const grid = document.getElementById('arcade-grid');
+
         myGames.forEach(game => {
             const card = document.createElement('div');
             card.className = 'game-card';
+            card.id = `card-${game.id}`;
+            
             card.innerHTML = `
                 <div class="game-header"><span class="game-title">${game.title}</span></div>
                 <div class="emulator-container">
-                    <iframe src="https://archive.org/embed/${game.id}" allow="fullscreen" allowfullscreen></iframe>
+                    <iframe 
+                        src="https://archive.org/embed/${game.id}" 
+                        allow="fullscreen; autoplay; keyboard-trap" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <div class="controls">
+                    <button class="cinema-btn" onclick="toggleCinema('card-${game.id}')">Toggle Cinema Mode</button>
                 </div>`;
             grid.appendChild(card);
         });
+
+        function toggleCinema(elementId) {
+            const elem = document.getElementById(elementId);
+            if (!document.fullscreenElement) {
+                elem.requestFullscreen().catch(err => {
+                    console.log(`Error: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
     </script>
 </body>
 </html>
