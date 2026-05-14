@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Duda Arcade | Multi-System Vault</title>
+    <title>Duda Arcade | Retro Classics</title>
     <style>
         :root {
             --bg-color: #020617;
@@ -24,106 +24,58 @@
         }
 
         header {
-            width: 100%; padding: 40px 20px;
+            width: 100%; padding: 50px 20px;
             background: linear-gradient(180deg, #1e293b 0%, #020617 100%);
             text-align: center; border-bottom: 3px solid var(--accent-color);
             box-shadow: 0 4px 20px rgba(14, 165, 233, 0.3);
+            margin-bottom: 50px;
         }
 
-        h1 { margin: 0; font-size: 2.5rem; letter-spacing: 4px; text-shadow: 2px 2px 0px var(--arcade-red); text-transform: uppercase; }
-
-        /* Navigation Tabs */
-        .tab-container { margin: 30px 0; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
-        .tab-btn {
-            background: #1e293b; color: var(--text-secondary); border: 1px solid #334155;
-            padding: 10px 20px; cursor: pointer; text-transform: uppercase; font-weight: bold;
-            transition: 0.3s;
-        }
-        .tab-btn.active { background: var(--accent-color); color: white; border-color: white; box-shadow: 0 0 10px var(--accent-color); }
+        h1 { margin: 0; font-size: 3rem; letter-spacing: 4px; text-shadow: 3px 3px 0px var(--arcade-red), -2px -2px 0px var(--accent-color); text-transform: uppercase; }
+        .subtitle { color: var(--accent-color); margin-top: 15px; font-size: 1.2rem; font-weight: bold; }
 
         #arcade-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(580px, 1fr));
-            gap: 40px; width: 95%; max-width: 1300px; padding-bottom: 80px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 50px; width: 95%; max-width: 1400px; padding-bottom: 80px;
         }
 
-        .game-card { background-color: var(--card-bg); padding: 10px; border: 1px solid #334155; border-radius: 4px; }
-        .game-header { background: #1e293b; padding: 8px; margin-bottom: 10px; text-align: center; border-bottom: 1px solid var(--accent-color); }
-        .game-title { font-size: 1rem; color: var(--accent-color); font-weight: bold; text-transform: uppercase; }
+        .game-card { background-color: var(--card-bg); padding: 10px; border: 2px solid #334155; box-shadow: 0 0 15px rgba(0,0,0,0.8); }
+        .game-header { background: #1e293b; padding: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--accent-color); display: flex; justify-content: center; }
+        .game-title { font-size: 1.1rem; color: var(--accent-color); text-transform: uppercase; font-weight: bold; }
         
-        .emulator-container { width: 560px; height: 384px; margin: 0 auto; background: #000; }
+        .emulator-container { width: 560px; height: 384px; margin: 0 auto; background: #000; border: 2px solid #000; }
         iframe { width: 100%; height: 100%; border: none; }
 
-        footer { margin-top: auto; padding: 20px; color: var(--text-secondary); font-size: 0.8rem; }
+        footer { margin-top: auto; padding: 30px; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>DUDA ARCADE</h1>
-        <div class="tab-container" id="tab-menu">
-            <button class="tab-btn active" onclick="filterSystem('dos')">MS-DOS Classics</button>
-            <button class="tab-btn" onclick="filterSystem('snes')">Super Nintendo</button>
-            <button class="tab-btn" onclick="filterSystem('genesis')">Sega Genesis</button>
-        </div>
+        <p class="subtitle">SYSTEM STATUS: ONLINE // PLAYER 1 READY</p>
     </header>
     
     <main id="arcade-grid"></main>
 
-    <footer>&copy; 2026 N. DUDA &middot; MULTI-SYSTEM VAULT ONLINE</footer>
+    <footer>&copy; 2026 N. DUDA &middot; POWERED BY THE ARCHIVE ENGINE</footer>
 
     <script>
-        const library = {
-            dos: [
-                { id: 'DukeNukemIi', title: 'Duke Nukem II' },
-                { id: 'msdos_Oregon_Trail_The_1990', title: 'The Oregon Trail' },
-                { id: 'msdos_Pac-Man_1983', title: 'Pac-Man' },
-                { id: 'msdos_Prince_of_Persia_1990', title: 'Prince of Persia' },
-                { id: 'msdos_Wolfenstein_3D_1992', title: 'Wolfenstein 3D' },
-                { id: 'msdos_Doom_1993', title: 'DOOM (Shareware)' },
-                { id: 'msdos_SimCity_1989', title: 'SimCity' },
-                { id: 'msdos_Where_in_the_World_is_Carmen_Sandiego_1985', title: 'Carmen Sandiego' },
-                { id: 'msdos_Tetris_1986', title: 'Tetris' },
-                { id: 'msdos_Leisure_Suit_Larry_in_the_Land_of_the_Lounge_Lizards_1987', title: 'Leisure Suit Larry' }
-            ],
-            snes: [
-                { id: 'super-mario-world-usa', title: 'Super Mario World' },
-                { id: 'legend-of-zelda-the-a-link-to-the-past-usa', title: 'Zelda: Link to the Past' },
-                { id: 'super-metroid-usa', title: 'Super Metroid' },
-                { id: 'donkey-kong-country-usa', title: 'Donkey Kong Country' },
-                { id: 'street-fighter-ii-turbo-usa', title: 'Street Fighter II Turbo' }
-            ],
-            genesis: [
-                { id: 'sonic-the-hedgehog-usa-europe', title: 'Sonic the Hedgehog' },
-                { id: 'mortal-kombat-ii-usa', title: 'Mortal Kombat II' },
-                { id: 'streets-of-rage-2-usa', title: 'Streets of Rage 2' },
-                { id: 'disney-s-the-lion-king-usa', title: 'The Lion King' }
-            ]
-        };
+        const myGames = [
+            { id: 'DukeNukemIi', title: 'Duke Nukem II' }
+        ];
 
-        function filterSystem(system) {
-            // Update Buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-
-            // Render Games
-            const grid = document.getElementById('arcade-grid');
-            grid.innerHTML = ''; // Clear current
-
-            library[system].forEach(game => {
-                const card = document.createElement('div');
-                card.className = 'game-card';
-                card.innerHTML = `
-                    <div class="game-header"><span class="game-title">${game.title}</span></div>
-                    <div class="emulator-container">
-                        <iframe src="https://archive.org/embed/${game.id}" allow="fullscreen" allowfullscreen></iframe>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        // Initial Load
-        window.onload = () => filterSystem('dos');
+        const grid = document.getElementById('arcade-grid');
+        myGames.forEach(game => {
+            const card = document.createElement('div');
+            card.className = 'game-card';
+            card.innerHTML = `
+                <div class="game-header"><span class="game-title">${game.title}</span></div>
+                <div class="emulator-container">
+                    <iframe src="https://archive.org/embed/${game.id}" allow="fullscreen" allowfullscreen></iframe>
+                </div>`;
+            grid.appendChild(card);
+        });
     </script>
 </body>
 </html>
