@@ -58,30 +58,33 @@
             align-items: center;
         }
         
-        /* Styles for when the card goes Fullscreen/Cinema Mode */
+        /* Cinema Mode: Fill the screen and center the emulator */
         .game-card:fullscreen {
-            padding: 0;
             background: black;
             width: 100vw;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
 
         .game-header { width: 100%; background: #1e293b; padding: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--accent-color); text-align: center; }
         .game-title { font-size: 1.1rem; color: var(--accent-color); text-transform: uppercase; font-weight: bold; }
         
-        /* Fixed aspect ratio for retro scaling */
+        /* The container stays retro 4:3 */
         .emulator-container { 
-            width: 100%; max-width: 640px; aspect-ratio: 4 / 3; 
-            background: #000; border: 2px solid #000; 
+            width: 640px; 
+            height: 480px; 
+            background: #000; 
+            border: 2px solid #000; 
+            position: relative;
         }
 
+        /* Logic to scale the iframe during Cinema Mode */
         .game-card:fullscreen .emulator-container {
-            max-width: none;
-            height: 100vh;
-            width: auto;
+            border: none;
+            /* We handle scaling via JavaScript to be pixel-perfect */
         }
 
         iframe { width: 100%; height: 100%; border: none; display: block; }
@@ -97,9 +100,13 @@
             font-family: 'Courier New', monospace;
             font-weight: bold;
             text-transform: uppercase;
-            transition: 0.2s;
         }
-        .cinema-btn:hover { background: #b91c1c; transform: scale(1.05); }
+
+        /* Hide UI elements in Cinema Mode */
+        .game-card:fullscreen .game-header, 
+        .game-card:fullscreen .controls {
+            display: none;
+        }
 
         footer { margin-top: auto; padding: 30px; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; }
     </style>
@@ -114,8 +121,8 @@
         <div class="guide-title">🚀 SYSTEM INSTRUCTIONS</div>
         <ul style="list-style-type: none; padding: 0; line-height: 1.6;">
             <li>1. Click the <span class="key">Power Button</span> on a game to load.</li>
-            <li>2. Click <span class="key">Toggle Cinema Mode</span> to fill the browser window.</li>
-            <li>3. Inside the game, press <span class="key">Alt</span> + <span class="key">Enter</span> to scale the graphics.</li>
+            <li>2. Click <span class="key">Toggle Cinema Mode</span>.</li>
+            <li>3. The game will automatically scale to your screen height.</li>
             <li>4. To exit: Press <span class="key">Esc</span>.</li>
         </ul>
     </div>
@@ -125,7 +132,6 @@
     <footer>&copy; 2026 N. DUDA &middot; POWERED BY THE ARCHIVE ENGINE</footer>
 
     <script>
-        // ADD NEW GAMES TO THIS LIST
         const myGames = [
             { id: 'DukeNukemIi', title: 'Duke Nukem II' }
         ];
@@ -139,7 +145,7 @@
             
             card.innerHTML = `
                 <div class="game-header"><span class="game-title">${game.title}</span></div>
-                <div class="emulator-container">
+                <div class="emulator-container" id="emu-${game.id}">
                     <iframe 
                         src="https://archive.org/embed/${game.id}" 
                         allow="fullscreen; autoplay; keyboard-trap" 
@@ -147,21 +153,39 @@
                     </iframe>
                 </div>
                 <div class="controls">
-                    <button class="cinema-btn" onclick="toggleCinema('card-${game.id}')">Toggle Cinema Mode</button>
+                    <button class="cinema-btn" onclick="toggleCinema('card-${game.id}', 'emu-${game.id}')">Toggle Cinema Mode</button>
                 </div>`;
             grid.appendChild(card);
         });
 
-        function toggleCinema(elementId) {
-            const elem = document.getElementById(elementId);
+        function toggleCinema(cardId, emuId) {
+            const card = document.getElementById(cardId);
+            const emu = document.getElementById(emuId);
+
             if (!document.fullscreenElement) {
-                elem.requestFullscreen().catch(err => {
+                card.requestFullscreen().then(() => {
+                    // Calculate scale to fit screen height
+                    const screenHeight = window.screen.height;
+                    const scale = screenHeight / 480;
+                    emu.style.transform = `scale(${scale})`;
+                    emu.style.transformOrigin = 'center center';
+                }).catch(err => {
                     console.log(`Error: ${err.message}`);
                 });
             } else {
                 document.exitFullscreen();
             }
         }
+
+        // Reset scale when exiting fullscreen
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                const emus = document.querySelectorAll('.emulator-container');
+                emus.forEach(e => {
+                    e.style.transform = 'scale(1)';
+                });
+            }
+        });
     </script>
 </body>
 </html>
