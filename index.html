@@ -8,7 +8,7 @@
         :root {
             --bg-color: #020617;
             --card-bg: #0f172a;
-            --accent-color: #0ea5e9; /* Cyan Arcade Glow */
+            --accent-color: #0ea5e9;
             --text-primary: #f8fafc;
             --text-secondary: #64748b;
             --arcade-red: #ef4444;
@@ -40,7 +40,6 @@
             margin: 0;
             font-size: 3rem;
             letter-spacing: 4px;
-            color: var(--text-primary);
             text-shadow: 3px 3px 0px var(--arcade-red), -2px -2px 0px var(--accent-color);
             text-transform: uppercase;
         }
@@ -49,7 +48,6 @@
             color: var(--accent-color);
             margin-top: 15px;
             font-size: 1.2rem;
-            letter-spacing: 1px;
             font-weight: bold;
         }
 
@@ -68,12 +66,6 @@
             padding: 10px;
             border: 2px solid #334155;
             box-shadow: 0 0 15px rgba(0,0,0,0.8);
-            position: relative;
-        }
-
-        .game-card:hover {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 25px rgba(14, 165, 233, 0.4);
         }
 
         .game-header {
@@ -93,12 +85,10 @@
         }
 
         .emulator-container {
-            position: relative;
             width: 560px;
             height: 384px;
             margin: 0 auto;
             background: #000;
-            overflow: hidden;
             border: 2px solid #000;
         }
 
@@ -106,21 +96,6 @@
             width: 100%;
             height: 100%;
             border: none;
-            background: transparent;
-        }
-
-        .loading-state {
-            padding: 100px;
-            font-size: 1.5rem;
-            color: var(--arcade-red);
-            text-transform: uppercase;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0.3; }
-            100% { opacity: 1; }
         }
 
         footer {
@@ -138,8 +113,6 @@
         <h1>DUDA ARCADE</h1>
         <p class="subtitle">SYSTEM STATUS: ONLINE // PLAYER 1 READY</p>
     </header>
-
-    <div id="loading" class="loading-state">Initializing System...</div>
     
     <main id="arcade-grid"></main>
 
@@ -148,60 +121,33 @@
     </footer>
 
     <script>
-        // Use the metadata list API which returns items for a specific user list
-        const LIST_API_URL = "https://archive.org/metadata/@nick_duda/lists/1/pc-games";
+        // MANUALLY ADD YOUR GAMES HERE
+        // Format: { id: 'Archive_Slug', title: 'Display Name' }
+        const myGames = [
+            { id: 'DukeNukemIi', title: 'Duke Nukem II' },
+            { id: 'msdos_Pac-Man_1983', title: 'Pac-Man (1983)' },
+            { id: 'msdos_Oregon_Trail_The_1990', title: 'The Oregon Trail' }
+        ];
 
-        async function fetchGames() {
-            const grid = document.getElementById('arcade-grid');
-            const loading = document.getElementById('loading');
+        const grid = document.getElementById('arcade-grid');
 
-            try {
-                const response = await fetch(LIST_API_URL);
-                const data = await response.json();
-                
-                // For 'Lists', Archive.org stores the item data inside a stringified 'items' metadata field
-                const rawItems = data.metadata.items ? JSON.parse(data.metadata.items) : [];
-
-                if (rawItems.length === 0) {
-                    loading.textContent = "Error: Vault Empty. Confirm list is public.";
-                    return;
-                }
-
-                loading.style.display = 'none';
-
-                rawItems.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'game-card';
-                    
-                    // Archive list identifier
-                    const slug = item.identifier;
-                    // Format title: use provided title or clean up the identifier slug
-                    const title = item.title || slug.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
-
-                    card.innerHTML = `
-                        <div class="game-header">
-                            <span class="game-title">${title}</span>
-                        </div>
-                        <div class="emulator-container">
-                            <iframe 
-                                src="https://archive.org/embed/${slug}" 
-                                allow="fullscreen" 
-                                webkitallowfullscreen="true" 
-                                mozallowfullscreen="true" 
-                                allowfullscreen>
-                            </iframe>
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
-
-            } catch (error) {
-                console.error("Fetch Error:", error);
-                loading.textContent = "Connection Terminated. Check link status.";
-            }
-        }
-
-        fetchGames();
+        myGames.forEach(game => {
+            const card = document.createElement('div');
+            card.className = 'game-card';
+            card.innerHTML = `
+                <div class="game-header">
+                    <span class="game-title">${game.title}</span>
+                </div>
+                <div class="emulator-container">
+                    <iframe 
+                        src="https://archive.org/embed/${game.id}" 
+                        allow="fullscreen" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
     </script>
 </body>
 </html>
