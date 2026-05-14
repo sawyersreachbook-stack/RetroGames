@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -133,8 +132,8 @@
     </footer>
 
     <script>
-        // Your specific Archive.org list metadata URL
-        const LIST_API_URL = "https://archive.org/metadata/@nick_duda/lists/1/pc-games";
+        // Updated API URL to use the search scrape service
+        const LIST_API_URL = "https://archive.org/services/search/v1/scrape?fields=identifier,title&q=list:pc-games AND uploader:nick_duda";
 
         async function fetchGames() {
             const grid = document.getElementById('arcade-grid');
@@ -144,11 +143,11 @@
                 const response = await fetch(LIST_API_URL);
                 const data = await response.json();
                 
-                // Parse items from metadata
-                const items = data.metadata.items ? JSON.parse(data.metadata.items) : [];
+                // The search scrape API returns items in an array called 'items'
+                const items = data.items || [];
 
                 if (items.length === 0) {
-                    loading.textContent = "No games found. Make sure your list is set to Public!";
+                    loading.textContent = "No games found. Double check that your list is named 'pc-games' and is public!";
                     return;
                 }
 
@@ -158,8 +157,9 @@
                     const card = document.createElement('div');
                     card.className = 'game-card';
                     
-                    const title = item.title || item.identifier;
+                    // Clean up title if missing
                     const slug = item.identifier;
+                    const title = item.title || slug.replace(/([A-Z])/g, ' $1').trim();
 
                     card.innerHTML = `
                         <div class="game-header">
