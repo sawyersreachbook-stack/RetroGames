@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DUDA ARCADE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap" rel="stylesheet">
+<style>
+
+/* ══════════════════════════════════════════
+   ROOT TOKENS
+══════════════════════════════════════════ */
+:root {
+  --black:    #000000;
+  --deep:     #020510;
+  --panel:    #08091a;
+  --cyan:     #00e5ff;
+  --magenta:  #ff00cc;
+  --yellow:   #ffe600;
+  --green:    #00ff66;
+  --red:      #ff2244;
+  --orange:   #ff8c00;
+  --white:    #ffffff;
+  --dim:      rgba(255,255,255,0.5);
+  --pixel:    'Press Start 2P', monospace;
+  --vt:       'VT323', monospace;
+}
+
+/* ══════════════════════════════════════════
+   RESET + BASE
+══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--deep);
+  color: var(--white);
+  font-family: var(--pixel);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect x='0' y='0' width='16' height='16' fill='%2300e5ff' opacity='.8'/%3E%3C/svg%3E") 8 8, crosshair;
+}
+
+/* ══════════════════════════════════════════
+   GLOBAL CRT SCANLINES OVERLAY
+══════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0,0,0,0.18) 2px,
+    rgba(0,0,0,0.18) 4px
+  );
+  pointer-events: none;
+  z-index: 9000;
+  animation: crt-flicker 8s infinite;
+}
+
+/* Vignette */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.72) 100%);
+  pointer-events: none;
+  z-index: 9001;
+}
+
+/* ══════════════════════════════════════════
+   STAR FIELD BACKGROUND
+══════════════════════════════════════════ */
+#starfield {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+#starfield canvas { display: block; }
+
+/* ══════════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════════ */
+@keyframes crt-flicker {
+  0%, 97%, 100%   { opacity: 1; }
+  98%             { opacity: 0.88; }
+  98.5%           { opacity: 1; }
+  99%             { opacity: 0.92; }
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes neon-pulse-cyan {
+  0%, 100% {
+    text-shadow:
+      0 0 4px #fff,
+      0 0 12px var(--cyan),
+      0 0 28px var(--cyan),
+      0 0 56px var(--cyan);
+  }
+  50% {
+    text-shadow:
+      0 0 2px #fff,
+      0 0 8px var(--cyan),
+      0 0 18px var(--cyan),
+      0 0 36px var(--cyan);
+  }
+}
+
+@keyframes neon-pulse-magenta {
+  0%, 100% {
+    text-shadow:
+      0 0 4px #fff,
+      0 0 12px var(--magenta),
+      0 0 28px var(--magenta),
+      0 0 56px var(--magenta);
+  }
+  50% {
+    text-shadow:
+      0 0 2px #fff,
+      0 0 8px var(--magenta),
+      0 0 18px var(--magenta),
+      0 0 36px var(--magenta);
+  }
+}
+
+@keyframes border-glow-cyan {
+  0%, 100% { box-shadow: 0 0 8px var(--cyan), 0 0 20px rgba(0,229,255,0.3), inset 0 0 10px rgba(0,229,255,0.04); }
+  50%       { box-shadow: 0 0 16px var(--cyan), 0 0 40px rgba(0,229,255,0.5), inset 0 0 20px rgba(0,229,255,0.08); }
+}
+
+@keyframes scanline-move {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes marquee {
+  0%   { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+
+@keyframes boot-cursor {
+  0%, 49% { border-right-color: var(--green); }
+  50%, 100% { border-right-color: transparent; }
+}
+
+@keyframes spin-pixel {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ══════════════════════════════════════════
+   MARQUEE TICKER
+══════════════════════════════════════════ */
+.ticker {
+  position: relative;
+  z-index: 10;
+  background: var(--black);
+  border-bottom: 2px solid var(--magenta);
+  height: 32px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 16px rgba(255,0,204,0.4);
+}
+.ticker-inner {
+  white-space: nowrap;
+  animation: marquee 28s linear infinite;
+  font-family: var(--vt);
+  font-size: 18px;
+  color: var(--magenta);
+  letter-spacing: .06em;
+}
+.ticker-inner span { color: var(--yellow); margin: 0 28px; }
+
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+header {
+  position: relative;
+  z-index: 10;
+  background: linear-gradient(180deg, #000 0%, #030315 40%, #08091a 100%);
+  border-bottom: 3px solid var(--cyan);
+  padding: 40px 20px 32px;
+  text-align: center;
+  overflow: hidden;
+  box-shadow: 0 4px 30px rgba(0,229,255,0.25);
+}
+
+/* Moving scanline across hero */
+header::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 60px;
+  background: linear-gradient(transparent, rgba(0,229,255,0.04), transparent);
+  animation: scanline-move 3.5s linear infinite;
+  pointer-events: none;
+}
+
+.header-subtitle {
+  font-family: var(--vt);
+  font-size: 22px;
+  color: var(--magenta);
+  letter-spacing: .18em;
+  margin-bottom: 24px;
+  animation: neon-pulse-magenta 2.5s ease-in-out infinite;
+}
+
+h1 {
+  font-family: var(--pixel);
+  font-size: clamp(20px, 5vw, 48px);
+  letter-spacing: .08em;
+  color: var(--cyan);
+  line-height: 1.3;
+  animation: neon-pulse-cyan 2s ease-in-out infinite;
+  margin-bottom: 16px;
+}
+
+.header-deco {
+  font-family: var(--vt);
+  font-size: 20px;
+  color: var(--yellow);
+  letter-spacing: .2em;
+  margin-bottom: 12px;
+}
+
+.insert-coin {
+  font-family: var(--pixel);
+  font-size: clamp(8px, 1.5vw, 14px);
+  color: var(--yellow);
+  letter-spacing: .12em;
+  animation: blink 1s step-end infinite;
+  margin-top: 8px;
+}
+
+.high-score-row {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+  margin-top: 20px;
+  font-family: var(--vt);
+  font-size: 18px;
+  color: rgba(255,255,255,.5);
+  letter-spacing: .12em;
+  flex-wrap: wrap;
+}
+.high-score-row span { color: var(--green); }
+
+/* ══════════════════════════════════════════
+   CONTROLS GUIDE
+══════════════════════════════════════════ */
+.guide-panel {
+  position: relative;
+  z-index: 10;
+  max-width: 860px;
+  margin: 28px auto;
+  padding: 0 20px;
+}
+.guide-inner {
+  background: rgba(0,0,0,0.7);
+  border: 2px dashed var(--green);
+  box-shadow: 0 0 12px rgba(0,255,102,0.2);
+  padding: 16px 24px;
+  border-radius: 4px;
+}
+.guide-title {
+  font-family: var(--pixel);
+  font-size: 9px;
+  color: var(--green);
+  margin-bottom: 14px;
+  letter-spacing: .12em;
+  text-shadow: 0 0 8px var(--green);
+}
+.guide-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+.guide-list li {
+  font-family: var(--vt);
+  font-size: 16px;
+  color: rgba(255,255,255,.7);
+  letter-spacing: .04em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.key {
+  display: inline-block;
+  background: #1a1a2e;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  padding: 2px 8px;
+  font-family: var(--pixel);
+  font-size: 7px;
+  box-shadow: 0 0 6px rgba(0,229,255,0.3);
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════
+   BOOT SCREEN
+══════════════════════════════════════════ */
+#boot-screen {
+  position: relative;
+  z-index: 10;
+  max-width: 860px;
+  margin: 0 auto 8px;
+  padding: 0 20px;
+}
+#boot-inner {
+  background: #000;
+  border: 2px solid var(--green);
+  box-shadow: 0 0 16px rgba(0,255,102,0.25);
+  padding: 20px 24px;
+  font-family: var(--vt);
+  font-size: 18px;
+  color: var(--green);
+  letter-spacing: .05em;
+  min-height: 120px;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  border-right: 2px solid var(--green);
+  animation: boot-cursor 0.7s step-end infinite;
+}
+
+/* ══════════════════════════════════════════
+   GAME COUNT BANNER
+══════════════════════════════════════════ */
+.game-count-bar {
+  display: none;
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  padding: 12px 20px;
+  font-family: var(--pixel);
+  font-size: 8px;
+  color: var(--yellow);
+  letter-spacing: .14em;
+  background: rgba(0,0,0,0.4);
+  border-bottom: 1px solid rgba(255,230,0,0.2);
+}
+
+/* ══════════════════════════════════════════
+   ARCADE GRID
+══════════════════════════════════════════ */
+#arcade-grid {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(660px, 1fr));
+  gap: 40px;
+  max-width: 1420px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+/* ══════════════════════════════════════════
+   GAME CARD  (Arcade Cabinet Style)
+══════════════════════════════════════════ */
+.game-card {
+  background: var(--panel);
+  border: 3px solid var(--cyan);
+  box-shadow: 0 0 12px var(--cyan), 0 0 30px rgba(0,229,255,0.15), inset 0 0 20px rgba(0,229,255,0.03);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: border-glow-cyan 3s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Cabinet top stripe (marquee) */
+.game-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--magenta), var(--cyan), var(--yellow), var(--green), var(--cyan), var(--magenta));
+  background-size: 200% 100%;
+  animation: marquee 3s linear infinite;
+}
+
+/* MARQUEE HEADER */
+.game-header {
+  width: 100%;
+  background: linear-gradient(180deg, #000 0%, #050520 100%);
+  border-bottom: 2px solid var(--cyan);
+  padding: 14px 16px 12px;
+  text-align: center;
+  position: relative;
+}
+.game-number {
+  position: absolute;
+  left: 14px; top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--pixel);
+  font-size: 7px;
+  color: var(--magenta);
+  letter-spacing: .1em;
+}
+.game-title {
+  font-family: var(--pixel);
+  font-size: clamp(7px, 1.2vw, 11px);
+  color: var(--yellow);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  text-shadow: 0 0 8px var(--yellow), 0 0 20px rgba(255,230,0,0.4);
+  line-height: 1.5;
+}
+
+/* CRT SCREEN BEZEL */
+.screen-bezel {
+  background: #000;
+  border: 6px solid #1a1a2a;
+  border-top: 8px solid #222;
+  border-bottom: 12px solid #111;
+  box-shadow:
+    inset 0 0 20px rgba(0,0,0,0.8),
+    inset 0 0 4px rgba(0,229,255,0.08),
+    0 0 8px rgba(0,0,0,0.8);
+  border-radius: 4px 4px 2px 2px;
+  margin: 12px 12px 0;
+  position: relative;
+  overflow: hidden;
+}
+/* CRT curvature overlay */
+.screen-bezel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at top left, rgba(255,255,255,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(0,0,0,0.3) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 2;
+}
+.emulator-container {
+  width: 640px;
+  height: 480px;
+  background: #000;
+  position: relative;
+}
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+/* COIN SLOT / CONTROLS PANEL */
+.cabinet-controls {
+  width: 100%;
+  background: linear-gradient(180deg, #050520 0%, #000 100%);
+  border-top: 2px solid #1a1a3a;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.coin-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--vt);
+  font-size: 16px;
+  color: var(--yellow);
+  letter-spacing: .08em;
+}
+.coin-slot::before {
+  content: '⬡';
+  color: var(--yellow);
+  font-size: 18px;
+  animation: spin-pixel 4s linear infinite;
+  display: inline-block;
+}
+
+.cinema-btn {
+  background: var(--red);
+  color: #fff;
+  border: none;
+  padding: 9px 16px;
+  cursor: pointer;
+  font-family: var(--pixel);
+  font-size: 7px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  box-shadow: 0 0 10px var(--red), 0 3px 0 #880011;
+  transition: all .1s;
+  position: relative;
+  top: 0;
+}
+.cinema-btn:hover { box-shadow: 0 0 18px var(--red), 0 4px 0 #880011; top: -1px; }
+.cinema-btn:active { top: 2px; box-shadow: 0 0 6px var(--red), 0 1px 0 #880011; }
+
+.ctrl-hints {
+  font-family: var(--vt);
+  font-size: 14px;
+  color: rgba(255,255,255,.3);
+  letter-spacing: .04em;
+}
+
+/* Fullscreen / Cinema Mode */
+.game-card:fullscreen {
+  background: black;
+  width: 100vw; height: 100vh;
+  display: flex; justify-content: center; align-items: center;
+  overflow: hidden;
+}
+.game-card:fullscreen .game-header,
+.game-card:fullscreen .cabinet-controls,
+.game-card:fullscreen .screen-bezel { margin: 0; border: none; }
+.game-card:fullscreen .game-header,
+.game-card:fullscreen .cabinet-controls { display: none; }
+.game-card:fullscreen .screen-bezel { border: none; border-radius: 0; }
+
+/* ══════════════════════════════════════════
+   ERROR STATE
+══════════════════════════════════════════ */
+.error-card {
+  grid-column: 1 / -1;
+  background: rgba(0,0,0,0.6);
+  border: 2px dashed var(--red);
+  padding: 32px;
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.error-card p {
+  font-family: var(--vt);
+  font-size: 20px;
+  color: var(--red);
+  line-height: 1.8;
+  letter-spacing: .06em;
+}
+.error-card code {
+  display: block;
+  background: #000;
+  border: 1px solid var(--red);
+  padding: 10px 16px;
+  font-family: var(--vt);
+  font-size: 16px;
+  color: var(--yellow);
+  margin: 16px 0;
+  text-align: left;
+  letter-spacing: .04em;
+}
+
+/* ══════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════ */
+footer {
+  position: relative;
+  z-index: 10;
+  padding: 28px 20px;
+  text-align: center;
+  border-top: 2px solid var(--magenta);
+  background: #000;
+  box-shadow: 0 -4px 20px rgba(255,0,204,0.2);
+}
+.footer-title {
+  font-family: var(--pixel);
+  font-size: 8px;
+  color: var(--magenta);
+  letter-spacing: .14em;
+  margin-bottom: 10px;
+  text-shadow: 0 0 8px var(--magenta);
+}
+footer p {
+  font-family: var(--vt);
+  font-size: 16px;
+  color: rgba(255,255,255,.4);
+  letter-spacing: .1em;
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+@media (max-width: 720px) {
+  #arcade-grid { grid-template-columns: 1fr; gap: 28px; padding: 20px 12px 60px; }
+  .emulator-container { width: 100%; height: 0; padding-bottom: 75%; }
+  .screen-bezel { margin: 8px 8px 0; border-width: 4px; }
+  .guide-list { grid-template-columns: 1fr 1fr; }
+  h1 { font-size: 18px; }
+  .header-subtitle { font-size: 18px; }
+  .high-score-row { gap: 24px; font-size: 15px; }
+}
+@media (max-width: 400px) {
+  h1 { font-size: 14px; }
+  .guide-list { grid-template-columns: 1fr; }
+  .cabinet-controls { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- Starfield -->
+<div id="starfield"><canvas id="stars"></canvas></div>
+
+<!-- Ticker -->
+<div class="ticker">
+  <div class="ticker-inner">
+    DUDA ARCADE &nbsp;★&nbsp; <span>INSERT COIN TO PLAY</span> &nbsp;★&nbsp;
+    POWERED BY THE ARCHIVE ENGINE &nbsp;★&nbsp; <span>GAME OVER? NEVER.</span> &nbsp;★&nbsp;
+    ALL YOUR GAMES ARE BELONG TO US &nbsp;★&nbsp; <span>HIGH SCORE: YOU</span> &nbsp;★&nbsp;
+    PRESS START &nbsp;★&nbsp; <span>© 2026 N. DUDA</span> &nbsp;★&nbsp;
+    DUDA ARCADE &nbsp;★&nbsp; <span>INSERT COIN TO PLAY</span> &nbsp;★&nbsp;
+    POWERED BY THE ARCHIVE ENGINE &nbsp;★&nbsp; <span>GAME OVER? NEVER.</span> &nbsp;★&nbsp;
+    ALL YOUR GAMES ARE BELONG TO US &nbsp;★&nbsp; <span>HIGH SCORE: YOU</span> &nbsp;★&nbsp;
+  </div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="header-deco">— ★ —&nbsp;&nbsp;N. DUDA PRESENTS&nbsp;&nbsp;— ★ —</div>
+  <div class="header-subtitle">WELCOME TO</div>
+  <h1>DUDA ARCADE</h1>
+  <div class="insert-coin">▶ INSERT COIN TO PLAY ◀</div>
+  <div class="high-score-row">
+    <div>1UP <span id="p1-score">000000</span></div>
+    <div>HI-SCORE <span>999999</span></div>
+    <div>2UP <span id="p2-score">000000</span></div>
+  </div>
+</header>
+
+<!-- Controls Guide -->
+<div class="guide-panel">
+  <div class="guide-inner">
+    <div class="guide-title">★ SYSTEM INSTRUCTIONS ★</div>
+    <ul class="guide-list">
+      <li><span class="key">CLICK</span> Load Game</li>
+      <li><span class="key">CINEMA</span> Fullscreen Mode</li>
+      <li><span class="key">ESC</span> Exit Cinema</li>
+      <li><span class="key">F5</span> Refresh Games</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Boot Log -->
+<div id="boot-screen">
+  <div id="boot-inner"></div>
+</div>
+
+<!-- Game Count -->
+<div class="game-count-bar" id="game-count-bar"></div>
+
+<!-- Main Grid -->
+<main id="arcade-grid"></main>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-title">★ GAME OVER? ★</div>
+  <p>&copy; 2026 N. DUDA &middot; POWERED BY THE ARCHIVE ENGINE &middot; ALL YOUR BASE ARE BELONG TO US</p>
+</footer>
+
+<script>
+/* ══════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════ */
+const CONFIG = {
+  // Archive.org username (without @)
+  USERNAME: 'nick_duda',
+  // List slug — update if it differs on Archive.org
+  LIST_SLUG: 'pc-games',
+  // Fallback if API can't load the list
+  FALLBACK_GAMES: [
+    { identifier: 'DukeNukemIi',      title: 'Duke Nukem II' }
+  ]
+};
+
+/* ══════════════════════════════════════════
+   STARFIELD
+══════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let W, H, stars = [];
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  for (let i = 0; i < 200; i++) {
+    stars.push({ x: Math.random()*W, y: Math.random()*H, r: Math.random()*1.5+0.3, speed: Math.random()*0.4+0.1, brightness: Math.random() });
+  }
+  function draw() {
+    ctx.fillStyle = 'rgba(2,5,16,0.25)';
+    ctx.fillRect(0, 0, W, H);
+    stars.forEach(s => {
+      s.y += s.speed;
+      if (s.y > H) { s.y = 0; s.x = Math.random()*W; }
+      const alpha = 0.4 + 0.6 * s.brightness;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(200,240,255,${alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ══════════════════════════════════════════
+   BOOT SEQUENCE
+══════════════════════════════════════════ */
+const bootEl = document.getElementById('boot-inner');
+const bootLines = [
+  'DUDA ARCADE OS v2.0',
+  'COPYRIGHT (C) 2026 N. DUDA',
+  '─────────────────────────────────',
+  'INITIALIZING HARDWARE...',
+  'LOADING ARCHIVE ENGINE...',
+  'CONNECTING TO ARCHIVE.ORG...',
+  'SCANNING PC-GAMES LIST...',
+  '░░░░░░░░░░ 0%'
+];
+let bootIdx = 0;
+let bootText = '';
+
+function typeLine(line, callback) {
+  let i = 0;
+  const interval = setInterval(() => {
+    bootText += line[i] || '';
+    bootEl.textContent = bootText;
+    i++;
+    if (i >= line.length) {
+      clearInterval(interval);
+      bootText += '\n';
+      bootEl.textContent = bootText;
+      if (callback) setTimeout(callback, 80);
+    }
+  }, 18);
+}
+
+function runBootLines(idx) {
+  if (idx >= bootLines.length) return;
+  typeLine(bootLines[idx], () => runBootLines(idx + 1));
+}
+
+function updateBootProgress(pct, label) {
+  const bars = Math.floor(pct / 10);
+  const fill = '█'.repeat(bars) + '░'.repeat(10 - bars);
+  const lines = bootText.split('\n');
+  lines[lines.length - 2] = `${fill} ${pct}%`;
+  bootText = lines.join('\n');
+  bootEl.textContent = bootText;
+}
+
+function bootComplete(count, source) {
+  bootText += `\nFOUND: ${count} GAME${count !== 1 ? 'S' : ''} [${source}]\n`;
+  bootText += 'INSERTING COIN...\nREADY PLAYER ONE.';
+  bootEl.textContent = bootText;
+  setTimeout(() => {
+    document.getElementById('boot-screen').style.display = 'none';
+  }, 2200);
+}
+
+/* ══════════════════════════════════════════
+   RENDER GAME CARD
+══════════════════════════════════════════ */
+function renderCard(game, index) {
+  const card = document.createElement('div');
+  card.className = 'game-card';
+  card.id = `card-${game.identifier}`;
+  card.innerHTML = `
+    <div class="game-header">
+      <span class="game-number">P${String(index + 1).padStart(2, '0')}</span>
+      <span class="game-title">${escapeHtml(game.title)}</span>
+    </div>
+    <div class="screen-bezel">
+      <div class="emulator-container" id="emu-${game.identifier}">
+        <iframe
+          src="https://archive.org/embed/${game.identifier}"
+          allow="fullscreen; autoplay; keyboard-trap"
+          allowfullscreen
+          loading="lazy"
+          title="${escapeHtml(game.title)}">
+        </iframe>
+      </div>
+    </div>
+    <div class="cabinet-controls">
+      <div class="coin-slot">CREDIT: 01</div>
+      <div class="ctrl-hints">ARROWS: MOVE &nbsp;|&nbsp; CTRL: FIRE</div>
+      <button class="cinema-btn" onclick="toggleCinema('card-${game.identifier}','emu-${game.identifier}')">
+        ▶ CINEMA MODE
+      </button>
+    </div>`;
+  return card;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ══════════════════════════════════════════
+   ARCHIVE.ORG API FETCH
+   Tries the simplelists search query first.
+   Falls back to the hardcoded list.
+══════════════════════════════════════════ */
+async function fetchGameList() {
+  // Two query formats to try — IA user list slugs can vary
+  const queries = [
+    `simplelists__${CONFIG.LIST_SLUG}:%40${CONFIG.USERNAME}`,
+    `simplelists__${CONFIG.LIST_SLUG}:${CONFIG.USERNAME}`
+  ];
+
+  for (const q of queries) {
+    try {
+      const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl%5B%5D=identifier&fl%5B%5D=title&output=json&rows=200&page=1`;
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const docs = data?.response?.docs;
+      if (docs && docs.length > 0) {
+        return { games: docs.map(d => ({ identifier: d.identifier, title: d.title || d.identifier })), source: 'ARCHIVE.ORG LIST' };
+      }
+    } catch(e) {
+      // Try next query
+    }
+  }
+  return null;
+}
+
+/* ══════════════════════════════════════════
+   POPULATE GRID
+══════════════════════════════════════════ */
+async function init() {
+  const grid = document.getElementById('arcade-grid');
+  const countBar = document.getElementById('game-count-bar');
+
+  // Start boot sequence
+  runBootLines(0);
+
+  // Wait for boot lines to mostly finish, then fetch
+  await new Promise(r => setTimeout(r, bootLines.length * 200 + 400));
+
+  // Animate the progress bar in the boot screen
+  for (let p = 10; p <= 90; p += 10) {
+    updateBootProgress(p, '');
+    await new Promise(r => setTimeout(r, 120));
+  }
+
+  const result = await fetchGameList();
+  updateBootProgress(100, '');
+
+  let games, source;
+  if (result && result.games.length > 0) {
+    games = result.games;
+    source = result.source;
+  } else {
+    games = CONFIG.FALLBACK_GAMES;
+    source = 'LOCAL FALLBACK';
+
+    // Show a note in the grid
+    const note = document.createElement('div');
+    note.className = 'error-card';
+    note.innerHTML = `
+      <p>⚠ COULD NOT AUTO-LOAD YOUR LIST FROM ARCHIVE.ORG<br><br>
+      The Archive.org simplelists API returned no results for:<br></p>
+      <code>simplelists__pc-games:@${CONFIG.USERNAME}</code>
+      <p>This usually means the list slug differs from the URL. Check your list URL and update <strong>LIST_SLUG</strong> in CONFIG at the top of the JS. Showing fallback game(s) below.<br><br>
+      If your list is public and the slug is correct, the API may need a few minutes to index it.</p>`;
+    grid.appendChild(note);
+  }
+
+  bootComplete(games.length, source);
+
+  // Render cards
+  games.forEach((game, i) => {
+    grid.appendChild(renderCard(game, i));
+  });
+
+  // Show count bar
+  countBar.textContent = `★ ${games.length} GAME${games.length !== 1 ? 'S' : ''} LOADED — ${source} ★`;
+  countBar.style.display = 'block';
+
+  // Animate P1 score counter
+  let score = 0;
+  const target = games.length * 10000;
+  const scoreEl = document.getElementById('p1-score');
+  const step = Math.ceil(target / 60);
+  const scoreInterval = setInterval(() => {
+    score = Math.min(score + step, target);
+    scoreEl.textContent = String(score).padStart(6, '0');
+    if (score >= target) clearInterval(scoreInterval);
+  }, 16);
+}
+
+/* ══════════════════════════════════════════
+   CINEMA MODE
+══════════════════════════════════════════ */
+function toggleCinema(cardId, emuId) {
+  const card = document.getElementById(cardId);
+  const emu  = document.getElementById(emuId);
+  if (!document.fullscreenElement) {
+    card.requestFullscreen().then(() => {
+      const scale = window.screen.height / 480;
+      emu.style.transform = `scale(${scale})`;
+      emu.style.transformOrigin = 'center center';
+    }).catch(err => console.warn('Fullscreen error:', err.message));
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) {
+    document.querySelectorAll('.emulator-container').forEach(e => {
+      e.style.transform = 'scale(1)';
+    });
+  }
+});
+
+/* ══════════════════════════════════════════
+   START
+══════════════════════════════════════════ */
+init();
+</script>
+</body>
+</html>
